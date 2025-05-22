@@ -1,0 +1,76 @@
+/* Styles personnalisés pour le système d'inscription des stages */
+
+.custom-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.form-input-error {
+  border-color: #f56565;
+}
+
+.page-transition {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Amélioration des formulaires */
+.form-input {
+  transition: all 0.3s ease;
+}
+
+.form-input:focus {
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+}
+
+/* Styles pour les cartes informatives */
+.info-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Styles pour les boutons */
+.btn {
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Styles pour la table des stagiaires */
+.table-row {
+  transition: background-color 0.2s ease;
+}
+
+.table-row:hover {
+  background-color: #ebf4ff;
+}
+
+/* Effet de zoom sur les images */
+.zoom-image {
+  transition: transform 0.3s ease;
+  overflow: hidden;
+}
+
+.zoom-image img {
+  transition: transform 0.3s ease;
+}
+
+.zoom-image:hover img {
+  transform: scale(1.05);
+}

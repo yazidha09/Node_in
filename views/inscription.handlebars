@@ -1,0 +1,105 @@
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md page-transition">
+    <h1 class="text-2xl font-bold mb-6 text-center text-blue-600">Inscription au Stage</h1>
+    
+    <div class="mb-6 bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+        <p class="text-blue-700">Veuillez remplir ce formulaire pour vous inscrire à un stage. Tous les champs marqués d'un <span class="text-red-500">*</span> sont obligatoires.</p>
+    </div>
+    
+    {{#if errors}}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <div class="flex items-center mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                <span class="font-semibold">Veuillez corriger les erreurs suivantes:</span>
+            </div>
+            <ul class="list-disc pl-5">
+                {{#each errors}}
+                    <li>{{this.msg}}</li>
+                {{/each}}
+            </ul>
+        </div>
+    {{/if}}
+    
+    <form action="/inscription" method="POST" novalidate>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-4">
+                <label for="nom" class="block text-gray-700 font-medium mb-2">Nom</label>
+                <input type="text" id="nom" name="nom" 
+                       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-500" 
+                       value="{{stagiaire.nom}}" required>
+            </div>
+            
+            <div class="mb-4">
+                <label for="prenom" class="block text-gray-700 font-medium mb-2">Prénom</label>
+                <input type="text" id="prenom" name="prenom" 
+                       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-500" 
+                       value="{{stagiaire.prenom}}" required>
+            </div>
+            
+            <div class="mb-4">
+                <label for="email" class="block text-gray-700 font-medium mb-2">Email</label>
+                <input type="email" id="email" name="email" 
+                       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-500" 
+                       value="{{stagiaire.email}}" required>
+            </div>
+            
+            <div class="mb-4">
+                <label for="telephone" class="block text-gray-700 font-medium mb-2">Téléphone</label>
+                <input type="tel" id="telephone" name="telephone" 
+                       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-500" 
+                       value="{{stagiaire.telephone}}" required>
+            </div>
+            
+            <div class="mb-4">
+                <label for="niveauEtudes" class="block text-gray-700 font-medium mb-2">Niveau d'études</label>
+                <select id="niveauEtudes" name="niveauEtudes" 
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-500" 
+                        required>
+                    <option value="" disabled {{#unless stagiaire.niveauEtudes}}selected{{/unless}}>Sélectionner un niveau</option>
+                    <option value="Licence" {{#if (eq stagiaire.niveauEtudes "Licence")}}selected{{/if}}>Licence</option>
+                    <option value="Master" {{#if (eq stagiaire.niveauEtudes "Master")}}selected{{/if}}>Master</option>
+                    <option value="Doctorat" {{#if (eq stagiaire.niveauEtudes "Doctorat")}}selected{{/if}}>Doctorat</option>
+                    <option value="Formation professionnelle" {{#if (eq stagiaire.niveauEtudes "Formation professionnelle")}}selected{{/if}}>Formation professionnelle</option>
+                    <option value="Autre" {{#if (eq stagiaire.niveauEtudes "Autre")}}selected{{/if}}>Autre</option>
+                </select>
+            </div>
+            
+            <div class="mb-4">
+                <label for="specialite" class="block text-gray-700 font-medium mb-2">Spécialité</label>
+                <input type="text" id="specialite" name="specialite" 
+                       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-500" 
+                       value="{{stagiaire.specialite}}" required>
+            </div>
+            
+            <div class="mb-4">
+                <label for="dateDebut" class="block text-gray-700 font-medium mb-2">Date de début</label>
+                <input type="date" id="dateDebut" name="dateDebut" 
+                       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-500" 
+                       value="{{stagiaire.dateDebut}}" required>
+            </div>
+            
+            <div class="mb-4">
+                <label for="dateFin" class="block text-gray-700 font-medium mb-2">Date de fin</label>
+                <input type="date" id="dateFin" name="dateFin" 
+                       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-500" 
+                       value="{{stagiaire.dateFin}}" required>
+            </div>
+        </div>
+          <div class="mt-8 text-center flex flex-col sm:flex-row justify-center gap-4">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring btn flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                S'inscrire
+            </button>
+            <button type="reset" class="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring btn">
+                Réinitialiser
+            </button>
+        </div>
+        
+        <div class="mt-6 text-center text-gray-600 text-sm">
+            En soumettant ce formulaire, vous acceptez nos conditions d'utilisation et notre politique de confidentialité.
+        </div>
+    </form>
+</div>
