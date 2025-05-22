@@ -4,6 +4,34 @@ const bodyParser = require('body-parser');
 const mysql = require('mysql2');
 const { check, validationResult } = require('express-validator');
 const path = require('path');
+const multer = require('multer');
+const fs = require('fs');
+
+// Configuration de multer pour l'upload des images
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, 'public', 'uploads', 'logos'));
+  },
+  filename: (req, file, cb) => {
+    // Garder l'extension d'origine mais changer le nom pour éviter les conflits
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, uniqueSuffix + ext);
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // Limite à 2MB
+  fileFilter: (req, file, cb) => {
+    // Accepter seulement les images
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Le fichier doit être une image'));
+    }
+  }
+});
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -69,9 +97,8 @@ connection.connect((err) => {
         return;
       }
       console.log('Connecté à la base de données systeme_stages');
-      
-      // Créer la table stagiaires si elle n'existe pas
-      const sql = `CREATE TABLE IF NOT EXISTS stagiaires (
+        // Créer la table stagiaires si elle n'existe pas
+      const sqlStagiaires = `CREATE TABLE IF NOT EXISTS stagiaires (
         id INT AUTO_INCREMENT PRIMARY KEY,
         nom VARCHAR(100) NOT NULL,
         prenom VARCHAR(100) NOT NULL,
@@ -84,12 +111,53 @@ connection.connect((err) => {
         dateInscription TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`;
       
-      db.query(sql, (err) => {
+      db.query(sqlStagiaires, (err) => {
         if (err) {
-          console.error('Erreur lors de la création de la table:', err);
+          console.error('Erreur lors de la création de la table stagiaires:', err);
           return;
         }
         console.log('Table stagiaires créée ou déjà existante');
+        
+        // Créer la table entreprises
+        const sqlEntreprises = `CREATE TABLE IF NOT EXISTS entreprises (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          nom VARCHAR(100) NOT NULL,
+          secteur VARCHAR(100) NOT NULL,
+          adresse VARCHAR(255) NOT NULL,
+          email VARCHAR(100) NOT NULL UNIQUE,
+          telephone VARCHAR(20) NOT NULL,
+          description TEXT,
+          logo VARCHAR(255),
+          dateInscription TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`;
+        
+        db.query(sqlEntreprises, (err) => {
+          if (err) {
+            console.error('Erreur lors de la création de la table entreprises:', err);
+            return;
+          }
+          console.log('Table entreprises créée ou déjà existante');
+          
+          // Créer la table demandes_stage
+          const sqlDemandes = `CREATE TABLE IF NOT EXISTS demandes_stage (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            stagiaire_id INT NOT NULL,
+            entreprise_id INT NOT NULL,
+            message TEXT NOT NULL,
+            statut ENUM('en_attente', 'acceptee', 'refusee') DEFAULT 'en_attente',
+            dateDemande TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (stagiaire_id) REFERENCES stagiaires(id) ON DELETE CASCADE,
+            FOREIGN KEY (entreprise_id) REFERENCES entreprises(id) ON DELETE CASCADE
+          )`;
+          
+          db.query(sqlDemandes, (err) => {
+            if (err) {
+              console.error('Erreur lors de la création de la table demandes_stage:', err);
+              return;
+            }
+            console.log('Table demandes_stage créée ou déjà existante');
+          });
+        });
       });
       
       // Remplacer la référence à db dans le scope global
@@ -204,6 +272,247 @@ app.get('/export-csv', (req, res) => {
     });
     
     res.send(csv);
+  });
+});
+
+// Validation des entreprises
+const entrepriseValidationRules = [
+  check('nom').notEmpty().withMessage('Le nom de l\'entreprise est obligatoire').trim().escape(),
+  check('secteur').notEmpty().withMessage('Le secteur d\'activité est obligatoire'),
+  check('adresse').notEmpty().withMessage('L\'adresse est obligatoire').trim().escape(),
+  check('email').isEmail().withMessage('Adresse email invalide').normalizeEmail(),
+  check('telephone').notEmpty().withMessage('Le téléphone est obligatoire')
+    .matches(/^[0-9+\s]+$/).withMessage('Format de téléphone invalide')
+];
+
+// Validation des demandes de stage
+const demandeStageValidationRules = [
+  check('message').notEmpty().withMessage('Le message de motivation est obligatoire').trim().escape()
+];
+
+// Routes pour les entreprises
+app.get('/inscription-entreprise', (req, res) => {
+  res.render('inscription-entreprise');
+});
+
+app.post('/inscription-entreprise', upload.single('logo'), entrepriseValidationRules, (req, res) => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    // Si un fichier a été uploadé mais qu'il y a des erreurs de validation, le supprimer
+    if (req.file) {
+      fs.unlinkSync(req.file.path);
+    }
+    
+    return res.render('inscription-entreprise', { 
+      errors: errors.array(),
+      entreprise: req.body
+    });
+  }
+
+  const entreprise = {
+    nom: req.body.nom,
+    secteur: req.body.secteur,
+    adresse: req.body.adresse,
+    email: req.body.email,
+    telephone: req.body.telephone,
+    description: req.body.description || null,
+    logo: req.file ? req.file.filename : null
+  };
+
+  global.db.query('INSERT INTO entreprises SET ?', entreprise, (err, result) => {
+    if (err) {
+      // En cas d'erreur, supprimer le fichier uploadé s'il existe
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
+      
+      if (err.code === 'ER_DUP_ENTRY') {
+        return res.render('inscription-entreprise', { 
+          errors: [{ msg: 'Cette adresse email est déjà utilisée' }],
+          entreprise: req.body
+        });
+      }
+      console.error('Erreur lors de l\'enregistrement de l\'entreprise:', err);
+      return res.render('inscription-entreprise', { 
+        errors: [{ msg: 'Erreur lors de l\'enregistrement, veuillez réessayer' }],
+        entreprise: req.body
+      });
+    }
+    
+    res.redirect('/liste-entreprises');
+  });
+});
+
+app.get('/liste-entreprises', (req, res) => {
+  global.db.query('SELECT * FROM entreprises ORDER BY nom ASC', (err, entreprises) => {
+    if (err) {
+      console.error('Erreur lors de la récupération des entreprises:', err);
+      return res.render('liste-entreprises', { error: 'Erreur lors de la récupération des entreprises' });
+    }
+    
+    res.render('liste-entreprises', { entreprises });
+  });
+});
+
+app.get('/entreprise/:id', (req, res) => {
+  const entrepriseId = req.params.id;
+  
+  global.db.query('SELECT * FROM entreprises WHERE id = ?', [entrepriseId], (err, results) => {
+    if (err) {
+      console.error('Erreur lors de la récupération de l\'entreprise:', err);
+      return res.render('detail-entreprise', { error: 'Entreprise non trouvée' });
+    }
+    
+    if (results.length === 0) {
+      return res.render('detail-entreprise', { error: 'Entreprise non trouvée' });
+    }
+    
+    res.render('detail-entreprise', { entreprise: results[0] });
+  });
+});
+
+app.get('/demande-stage/:entrepriseId', (req, res) => {
+  const entrepriseId = req.params.entrepriseId;
+  
+  // Dans un système réel, on récupérerait l'ID du stagiaire connecté depuis la session
+  // Pour l'exemple, nous allons supposer qu'on le passe en paramètre de requête
+  const stagiaireId = req.query.stagiaireId;
+  
+  global.db.query('SELECT * FROM entreprises WHERE id = ?', [entrepriseId], (err, entrepriseResults) => {
+    if (err || entrepriseResults.length === 0) {
+      return res.redirect('/liste-entreprises');
+    }
+    
+    const entreprise = entrepriseResults[0];
+    
+    if (stagiaireId) {
+      global.db.query('SELECT * FROM stagiaires WHERE id = ?', [stagiaireId], (err, stagiaireResults) => {
+        if (err || stagiaireResults.length === 0) {
+          return res.render('demande-stage', { 
+            entreprise,
+            error: 'Stagiaire non trouvé. Veuillez vous inscrire avant de faire une demande de stage.'
+          });
+        }
+        
+        res.render('demande-stage', { 
+          entreprise,
+          stagiaire: stagiaireResults[0]
+        });
+      });
+    } else {
+      res.render('demande-stage', { entreprise });
+    }
+  });
+});
+
+app.post('/demande-stage/:entrepriseId', demandeStageValidationRules, (req, res) => {
+  const errors = validationResult(req);
+  const entrepriseId = req.params.entrepriseId;
+  const stagiaireId = req.body.stagiaire_id;
+  
+  if (!errors.isEmpty()) {
+    global.db.query('SELECT * FROM entreprises WHERE id = ?', [entrepriseId], (err, entrepriseResults) => {
+      if (err || entrepriseResults.length === 0) {
+        return res.redirect('/liste-entreprises');
+      }
+      
+      global.db.query('SELECT * FROM stagiaires WHERE id = ?', [stagiaireId], (err, stagiaireResults) => {
+        if (err || stagiaireResults.length === 0) {
+          return res.render('demande-stage', { 
+            entreprise: entrepriseResults[0],
+            errors: errors.array(),
+            demande: req.body
+          });
+        }
+        
+        return res.render('demande-stage', { 
+          entreprise: entrepriseResults[0],
+          stagiaire: stagiaireResults[0],
+          errors: errors.array(),
+          demande: req.body
+        });
+      });
+    });
+    return;
+  }
+
+  const demande = {
+    stagiaire_id: stagiaireId,
+    entreprise_id: entrepriseId,
+    message: req.body.message
+  };
+
+  global.db.query('INSERT INTO demandes_stage SET ?', demande, (err, result) => {
+    if (err) {
+      console.error('Erreur lors de l\'enregistrement de la demande:', err);
+      global.db.query('SELECT * FROM entreprises WHERE id = ?', [entrepriseId], (err, entrepriseResults) => {
+        if (err || entrepriseResults.length === 0) {
+          return res.redirect('/liste-entreprises');
+        }
+        
+        global.db.query('SELECT * FROM stagiaires WHERE id = ?', [stagiaireId], (err, stagiaireResults) => {
+          return res.render('demande-stage', { 
+            entreprise: entrepriseResults[0],
+            stagiaire: stagiaireResults[0],
+            errors: [{ msg: 'Erreur lors de l\'enregistrement de la demande. Veuillez réessayer.' }],
+            demande: req.body
+          });
+        });
+      });
+      return;
+    }
+    
+    // Rediriger vers la page des demandes du stagiaire avec un message de succès
+    res.redirect(`/mes-demandes?success=Votre demande a été envoyée avec succès`);
+  });
+});
+
+app.get('/mes-demandes', (req, res) => {
+  // Dans un système réel, on récupérerait l'ID du stagiaire connecté depuis la session
+  // Pour l'exemple, nous allons supposer qu'on le passe en paramètre de requête
+  const stagiaireId = req.query.stagiaireId;
+  
+  if (!stagiaireId) {
+    return res.render('mes-demandes', { 
+      error: 'Veuillez vous connecter pour voir vos demandes de stage'
+    });
+  }
+  
+  const query = `
+    SELECT ds.*, e.nom, e.secteur, e.logo
+    FROM demandes_stage ds
+    JOIN entreprises e ON ds.entreprise_id = e.id
+    WHERE ds.stagiaire_id = ?
+    ORDER BY ds.dateDemande DESC
+  `;
+  
+  global.db.query(query, [stagiaireId], (err, results) => {
+    if (err) {
+      console.error('Erreur lors de la récupération des demandes:', err);
+      return res.render('mes-demandes', { 
+        error: 'Erreur lors de la récupération des demandes'
+      });
+    }
+    
+    // Transformer les résultats pour avoir un format plus facile à utiliser dans le template
+    const demandes = results.map(row => ({
+      id: row.id,
+      statut: row.statut,
+      dateDemande: row.dateDemande,
+      message: row.message,
+      entreprise: {
+        id: row.entreprise_id,
+        nom: row.nom,
+        secteur: row.secteur,
+        logo: row.logo
+      }
+    }));
+    
+    res.render('mes-demandes', { 
+      demandes,
+      success: req.query.success
+    });
   });
 });
 

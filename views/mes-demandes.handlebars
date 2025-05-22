@@ -1,0 +1,86 @@
+<div class="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-md page-transition">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-blue-600">Mes Demandes de Stage</h1>
+    </div>
+    
+    {{#if error}}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            {{error}}
+        </div>
+    {{/if}}
+    
+    {{#if demandes}}
+        <div class="bg-white overflow-x-auto rounded-lg border border-gray-200">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-gray-50 border-b">
+                        <th class="py-3 px-4 text-left font-medium text-gray-700">Entreprise</th>
+                        <th class="py-3 px-4 text-left font-medium text-gray-700">Date de demande</th>
+                        <th class="py-3 px-4 text-left font-medium text-gray-700">Statut</th>
+                        <th class="py-3 px-4 text-left font-medium text-gray-700">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each demandes}}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="py-3 px-4">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded flex-shrink-0 bg-gray-100 flex items-center justify-center mr-3">
+                                        {{#if this.entreprise.logo}}
+                                            <img src="/uploads/logos/{{this.entreprise.logo}}" alt="Logo" class="h-8 w-8 object-contain">
+                                        {{else}}
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                            </svg>
+                                        {{/if}}
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-800">{{this.entreprise.nom}}</div>
+                                        <div class="text-sm text-gray-600">{{this.entreprise.secteur}}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4 text-sm text-gray-700">{{formatDate this.dateDemande}}</td>
+                            <td class="py-3 px-4">
+                                {{#if (eq this.statut "en_attente")}}
+                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">En attente</span>
+                                {{else if (eq this.statut "acceptee")}}
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Acceptée</span>
+                                {{else}}
+                                    <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Refusée</span>
+                                {{/if}}
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="flex space-x-2">
+                                    <a href="/entreprise/{{this.entreprise.id}}" class="text-blue-600 hover:text-blue-800 text-sm">
+                                        Voir entreprise
+                                    </a>
+                                    <span class="text-gray-400">|</span>
+                                    <a href="/demande/{{this.id}}" class="text-blue-600 hover:text-blue-800 text-sm">
+                                        Détails
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    {{else}}
+        <div class="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p class="text-gray-700 text-lg mb-4">Vous n'avez pas encore fait de demande de stage.</p>
+            <a href="/liste-entreprises" class="inline-block mt-4 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 btn flex items-center mx-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                </svg>
+                Trouver des entreprises
+            </a>
+        </div>
+    {{/if}}
+</div>

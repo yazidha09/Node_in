@@ -52,11 +52,37 @@
                         </svg>
                         Système de Stages
                     </a>
-                </div>
-                <div class="space-x-6 hidden md:flex">
+                </div>                <div class="space-x-6 hidden md:flex">
                     <a href="/" class="hover:underline hover:text-blue-200 transition">Accueil</a>
-                    <a href="/inscription" class="hover:underline hover:text-blue-200 transition">Inscription</a>
-                    <a href="/liste" class="hover:underline hover:text-blue-200 transition">Liste des Stagiaires</a>
+                    <div class="relative group inline-block">
+                        <a href="#" class="hover:underline hover:text-blue-200 transition flex items-center">
+                            Stagiaires
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        <div class="absolute left-0 mt-1 w-48 bg-white rounded-md shadow-lg hidden group-hover:block z-50">
+                            <div class="py-1">
+                                <a href="/inscription" class="block px-4 py-2 text-gray-800 hover:bg-blue-500 hover:text-white">S'inscrire</a>
+                                <a href="/liste" class="block px-4 py-2 text-gray-800 hover:bg-blue-500 hover:text-white">Liste des stagiaires</a>
+                                <a href="/mes-demandes" class="block px-4 py-2 text-gray-800 hover:bg-blue-500 hover:text-white">Mes demandes</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative group inline-block">
+                        <a href="#" class="hover:underline hover:text-blue-200 transition flex items-center">
+                            Entreprises
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        <div class="absolute left-0 mt-1 w-48 bg-white rounded-md shadow-lg hidden group-hover:block z-50">
+                            <div class="py-1">
+                                <a href="/inscription-entreprise" class="block px-4 py-2 text-gray-800 hover:bg-blue-500 hover:text-white">Inscrire une entreprise</a>
+                                <a href="/liste-entreprises" class="block px-4 py-2 text-gray-800 hover:bg-blue-500 hover:text-white">Liste des entreprises</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="md:hidden">
                     <button id="menu-toggle" class="text-white">
@@ -68,8 +94,17 @@
             </div>
             <div id="mobile-menu" class="md:hidden hidden py-4">
                 <a href="/" class="block py-2 hover:text-blue-200 transition">Accueil</a>
-                <a href="/inscription" class="block py-2 hover:text-blue-200 transition">Inscription</a>
-                <a href="/liste" class="block py-2 hover:text-blue-200 transition">Liste des Stagiaires</a>
+                <div class="py-2">
+                    <div class="font-medium">Stagiaires</div>
+                    <a href="/inscription" class="block py-2 pl-4 hover:text-blue-200 transition">S'inscrire</a>
+                    <a href="/liste" class="block py-2 pl-4 hover:text-blue-200 transition">Liste des stagiaires</a>
+                    <a href="/mes-demandes" class="block py-2 pl-4 hover:text-blue-200 transition">Mes demandes</a>
+                </div>
+                <div class="py-2">
+                    <div class="font-medium">Entreprises</div>
+                    <a href="/inscription-entreprise" class="block py-2 pl-4 hover:text-blue-200 transition">Inscrire une entreprise</a>
+                    <a href="/liste-entreprises" class="block py-2 pl-4 hover:text-blue-200 transition">Liste des entreprises</a>
+                </div>
             </div>
         </nav>
     </header>
